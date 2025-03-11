@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../../api/api';
 import Loader from '../../components/common/Loader';
 
 const ManageWoodTypes = () => {
@@ -11,7 +11,7 @@ const ManageWoodTypes = () => {
   const fetchWoodTypes = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('/api/wood');
+      const response = await api.get('/api/wood');
       setWoodTypes(response.data);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to fetch wood types');
@@ -28,7 +28,7 @@ const ManageWoodTypes = () => {
     try {
       const userInfo = JSON.parse(localStorage.getItem('userInfo'));
       const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
-      const response = await axios.post('/api/wood', newWoodType, config);
+      const response = await api.post('/api/wood', newWoodType, config);
       setWoodTypes([...woodTypes, response.data]);
       setNewWoodType({ name: '', pricePerCubicMeter: '' });
     } catch (err) {
@@ -91,7 +91,7 @@ const ManageWoodTypes = () => {
               <tr className="bg-gray-200">
                 <th className="px-4 py-2 border">Name</th>
                 <th className="px-4 py-2 border">Price per Cubic Meter</th>
-                <th className="px-4 py-2 border">Actions</th>
+                {/* <th className="px-4 py-2 border">Actions</th> */}
               </tr>
             </thead>
             <tbody>
@@ -99,7 +99,7 @@ const ManageWoodTypes = () => {
                 <tr key={wt._id} className="border-b">
                   <td className="px-4 py-2">{wt.name}</td>
                   <td className="px-4 py-2">{wt.pricePerCubicMeter}</td>
-                  <td className="px-4 py-2">
+                  {/* <td className="px-4 py-2">
                     <input
                       type="number"
                       step="0.01"
@@ -107,7 +107,7 @@ const ManageWoodTypes = () => {
                       className="p-2 border rounded mr-2"
                       onBlur={(e) => handleUpdatePrice(wt._id, e.target.value)}
                     />
-                  </td>
+                  </td> */}
                 </tr>
               ))}
             </tbody>

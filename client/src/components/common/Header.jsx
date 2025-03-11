@@ -17,15 +17,41 @@ const Header = () => {
         <Link to="/" className="text-xl font-bold">Furniture E-commerce</Link>
         <nav>
           <ul className="flex space-x-4">
-            <li>
+            
+            
+            {/* Show Cart only if user is logged in as Customer */}
+            {userInfo && userInfo.role === 'customer' && (
+              <>
+              <li>
               <Link to="/" className="hover:text-gray-300">Home</Link>
             </li>
             <li>
               <Link to="/products" className="hover:text-gray-300">Products</Link>
             </li>
-            <li>
-              <Link to="/cart" className="hover:text-gray-300">Cart</Link>
-            </li>
+              <li>
+                <Link to="/cart" className="hover:text-gray-300">Cart</Link>
+              </li>
+              </>
+            )}
+
+            {/* Show Admin Controls if user is Admin */}
+            {userInfo && userInfo.role === 'admin' && (
+              <>
+                <li>
+                  <Link to="/admin/dashboard" className="hover:text-gray-300">Dashboard</Link>
+                </li>
+                <li>
+                  <Link to="/admin/products" className="hover:text-gray-300">Products</Link>
+                </li>
+                <li>
+                  <Link to="/admin/orders" className="hover:text-gray-300">Orders</Link>
+                </li>
+                <li>
+                  <Link to="/admin/wood-types" className="hover:text-gray-300">Wood Types</Link>
+                </li>
+              </>
+            )}
+
             {!userInfo ? (
               <>
                 <li>
