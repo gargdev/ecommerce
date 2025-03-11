@@ -5,12 +5,27 @@ const WoodType = require("../models/WoodType");
 const addProduct = async (req, res) => {
   try {
     const { name, description, price, category, customizable, length, breadth, height, woodType } = req.body;
-    const image = req.file ? req.file.filename : null;
+
+
+    if (!name || !description || !price || !category) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ message: "Image is required" });
+    }
+
+    const image = req.file.filename; // Store filename
+
 
     let finalPrice = price;
     if (customizable && woodType) {
       const wood = await WoodType.findById(woodType);
       if (!wood) return res.status(404).json({ message: "Wood type not found" });
+
+      if (!length || !breadth || !height) {
+        return res.status(400).json({ message: "Dimensions are required for customizable products" });
+      }
 
       const volume = length * breadth * height; // Calculate volume
       finalPrice = volume * wood.pricePerCubicMeter; // Calculate price based on volume and wood type
@@ -28,7 +43,7 @@ const addProduct = async (req, res) => {
     });
 
     await product.save();
-    res.status(201).json(product);
+    res.status(201).json({ success: true, product });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
