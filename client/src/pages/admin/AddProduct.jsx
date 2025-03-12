@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { createProduct } from '../../features/products/productSlice';
 import api from '../../api/api';
 import Loader from '../../components/common/Loader';
 
 const AddProduct = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -20,7 +24,6 @@ const AddProduct = () => {
     selectedWoodTypes: [],
   });
 
-  // State for dynamic variants
   const [variants, setVariants] = useState([]);
   const [imageFile, setImageFile] = useState(null);
   const [woodTypes, setWoodTypes] = useState([]);
@@ -122,14 +125,12 @@ const AddProduct = () => {
         return;
       }
 
-      await api.post('/api/admin/product', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      await dispatch(createProduct(formData)).unwrap();
       setLoading(false);
       navigate('/admin/products');
     } catch (err) {
       setLoading(false);
-      setError(err.response?.data?.message || "Failed to add product");
+      setError(err.message || "Failed to add product");
     }
   };
 
