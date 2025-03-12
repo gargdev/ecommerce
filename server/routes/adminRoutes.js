@@ -15,7 +15,13 @@ const upload = require("../middleware/uploadMiddleware"); // Ensure this is impo
 const router = express.Router();
 
 // Product Routes
-router.post("/product", protect, isAdmin,  upload.single("image"), addProduct);
+router.post("/product",
+  (req, res, next) => {
+    console.log("Uploaded file:", req.file); // This will confirm if multer handled the upload correctly
+    next(); // Continue to the addProduct controller
+  },
+  
+  protect, isAdmin,  upload.single("image"), addProduct);
 router.put("/product/:id", protect, isAdmin, updateProduct);
 router.delete("/product/:id", protect, isAdmin, deleteProduct);
 
