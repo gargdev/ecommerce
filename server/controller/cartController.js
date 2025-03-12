@@ -1,20 +1,33 @@
 const Cart = require("../models/Cart");
 const Product = require("../models/Product");
 
+
 // Add Item to Cart
 const addToCart = async (req, res) => {
   try {
     const { productId, quantity, length, breadth, height, woodType } = req.body;
-    const product = await Product.findById(productId).populate("woodType");
+    // Change the populate call to target the nested woodType field
+    const product = await Product.findById(productId).populate("woodTypes.woodType");
     if (!product) return res.status(404).json({ message: "Product not found" });
 
-    let price = product.price;
-    if (product.customizable) {
+    let price = product.basePrice; // Assuming basePrice is used here
+    if (product.isCustomizable) {
       if (!length || !breadth || !height || !woodType)
         return res.status(400).json({ message: "Missing dimensions or wood type" });
 
+      // Find the selected wood type from the woodTypes array
+      const selectedWoodType = product.woodTypes.find(
+        (wt) => wt.woodType._id.toString() === woodType
+      );
+
+      if (!selectedWoodType) {
+        return res.status(400).json({ message: "Invalid wood type" });
+      }
+
       const volume = length * breadth * height;
-      price = volume * product.woodType.pricePerCubicMeter;
+      // Here, adjust the calculation based on your schema;
+      // for example, you might have pricePerCubicMeter in the WoodType model:
+      price = volume * selectedWoodType.woodType.pricePerCubicMeter;
     }
 
     let cart = await Cart.findOne({ user: req.user.id });
@@ -36,6 +49,7 @@ const addToCart = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 
 // Get Cart
 const getCart = async (req, res) => {

@@ -20,53 +20,98 @@ const ManageProducts = () => {
         headers: { Authorization: `Bearer ${userInfo.token}` },
       };
       await axios.delete(`/api/products/${productId}`, config);
-      dispatch(fetchProducts());
+      dispatch(fetchProducts()); // Refresh the product list after deletion
     } catch (err) {
       console.error('Delete error', err);
     }
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">Manage Products</h1>
-      <Link
-        to="/admin/product/new"
-        className="bg-blue-500 text-white px-4 py-2 rounded mb-4 inline-block"
-      >
-        Add New Product
-      </Link>
+    <div className="max-w-6xl mx-auto p-6">
+      <h1 className="text-3xl font-bold mb-6 text-center">Manage Products</h1>
+
+      <div className="flex justify-end mb-4">
+        <Link
+          to="/admin/product/new"
+          className="bg-blue-500 text-white px-4 py-2 rounded shadow hover:bg-blue-600"
+        >
+          Add New Product
+        </Link>
+      </div>
+
       {loading ? (
         <Loader />
       ) : error ? (
-        <div className="text-red-500">{error}</div>
+        <div className="text-red-500 text-center">{error}</div>
+      ) : products.length === 0 ? (
+        <div className="text-gray-500 text-center">No products found.</div>
       ) : (
-        <table className="min-w-full border">
-          <thead>
-            <tr className="bg-gray-200">
-              <th className="px-4 py-2 border">Name</th>
-              <th className="px-4 py-2 border">Price</th>
-              <th className="px-4 py-2 border">Category</th>
-              <th className="px-4 py-2 border">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {products.map((product) => (
-              <tr key={product._id} className="border-b">
-                <td className="px-4 py-2">{product.name}</td>
-                <td className="px-4 py-2">${product.price.toFixed(2)}</td>
-                <td className="px-4 py-2">{product.category}</td>
-                <td className="px-4 py-2 space-x-2">
-                  <Link to={`/admin/product/edit/${product._id}`} className="text-blue-500">
-                    Edit
-                  </Link>
-                  <button onClick={() => handleDelete(product._id)} className="text-red-500">
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {products.map((product) => (
+            <div key={product._id} className="border rounded-lg shadow-lg p-4 bg-white">
+              {/* Product Image */}
+              <div className="flex justify-center mb-4">
+                <img
+                  src={`/uploads/${product.image}`}
+                  alt={product.name}
+                  className="w-40 h-40 object-cover rounded"
+                />
+              </div>
+
+              {/* Product Details */}
+              <h2 className="text-xl font-bold text-gray-800">{product.name}</h2>
+              <p className="text-gray-600">Category: {product.category}</p>
+              <p className="text-lg font-semibold text-blue-500">
+                Price: ${product.basePrice.toFixed(2)}
+              </p>
+              <p className={`text-sm font-semibold ${product.stock > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {product.stock > 0 ? `In Stock: ${product.stock}` : 'Out of Stock'}
+              </p>
+
+              {/* Variants */}
+              {product.variants?.length > 0 && (
+                <div className="mt-3">
+                  <h3 className="font-semibold text-gray-700">Variants:</h3>
+                  <ul className="list-disc pl-5 text-gray-600">
+                    {product.variants.map((variant) => (
+                      <li key={variant._id}>
+                        <strong>{variant.type}:</strong>{' '}
+                        {variant.options.map((opt) => `${opt.name} (+$${opt.priceAdjustment})`).join(', ')}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Wood Types */}
+              {product.woodTypes?.length > 0 && (
+                <div className="mt-3">
+                  <h3 className="font-semibold text-gray-700">Wood Types:</h3>
+                  <ul className="list-disc pl-5 text-gray-600">
+                    {product.woodTypes.map(({ woodType, price }) => (
+                      <li key={woodType._id}>
+                        {woodType.name} - ${price} per cubic meter
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="mt-4 flex justify-between items-center">
+                <Link to={`/admin/product/edit/${product._id}`} className="text-blue-500 hover:underline">
+                  Edit
+                </Link>
+                <button
+                  onClick={() => handleDelete(product._id)}
+                  className="text-red-500 hover:underline"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );

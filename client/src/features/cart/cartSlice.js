@@ -23,7 +23,7 @@ export const addItemToCart = createAsyncThunk(
     try {
       const { auth: { userInfo } } = getState();
       const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
-      const response = await axios.post('/api/cart', itemData, config);
+      const response = await api.post('/api/cart', itemData, config);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response.data);

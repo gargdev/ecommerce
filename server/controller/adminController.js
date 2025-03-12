@@ -5,17 +5,60 @@ const Order = require("../models/Order");
 // Add Product
 const addProduct = async (req, res) => {
   try {
-    const { name, price, size, stock } = req.body;
+    const { name, description, category, basePrice, isCustomizable, length, width, height, variants, woodTypes } = req.body;
+    const image = req.file ? req.file.filename : null;
+
+    if (!name || !description || !category || !basePrice || !image) {
+      return res.status(400).json({ message: 'Required fields are missing' });
+    }
+
+    let dimensions;
+    if (isCustomizable === 'true' || isCustomizable === true) {
+      if (!length || !width || !height) {
+        return res.status(400).json({ message: 'Dimensions are required for customizable products' });
+      }
+      dimensions = { length: parseFloat(length), width: parseFloat(width), height: parseFloat(height) };
+    }
+
+    let parsedVariants = [];
+    if (variants) {
+      try {
+        parsedVariants = JSON.parse(variants);
+      } catch (err) {
+        return res.status(400).json({ message: 'Invalid variants format' });
+      }
+    }
+
+    let selectedWoodTypeIds = [];
+    if (woodTypes) {
+      try {
+        selectedWoodTypeIds = JSON.parse(woodTypes);
+      } catch (err) {
+        return res.status(400).json({ message: 'Invalid woodTypes format' });
+      }
+    }
+
+    // Fetch wood types and their prices
+    const woodTypeDocs = await WoodType.find({ _id: { $in: selectedWoodTypeIds } });
+    const woodTypesWithPrices = woodTypeDocs.map((wood) => ({
+      woodType: wood._id,
+      price: wood.pricePerCubicMeter,
+    }));
 
     const product = new Product({
       name,
-      price,
-      size,
-      stock,
+      description,
+      category,
+      basePrice: parseFloat(basePrice),
+      isCustomizable: isCustomizable === 'true' || isCustomizable === true,
+      dimensions,
+      variants: parsedVariants,
+      woodTypes: woodTypesWithPrices,
+      image,
     });
 
     await product.save();
-    res.status(201).json({ success: true, message: "Product added", product });
+    res.status(201).json(product);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
