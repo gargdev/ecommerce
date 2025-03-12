@@ -6,14 +6,12 @@ import Loader from '../components/common/Loader';
 
 const Products = () => {
   const dispatch = useDispatch();
-  
-  // Access products state from Redux store
   const { products, loading, error } = useSelector((state) => state.products);
-  
+
   useEffect(() => {
     dispatch(fetchProducts());
   }, [dispatch]);
-  
+
   return (
     <div>
       <h1 className="text-3xl font-bold mb-6">Products</h1>

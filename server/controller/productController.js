@@ -37,7 +37,7 @@ const addProduct = async (req, res) => {
 // Get All Products
 const getProducts = async (req, res) => {
   try {
-    const products = await Product.find().populate("woodType");
+    const products = await Product.find().populate("woodTypes.woodType");
     res.json(products);
   } catch (error) {
     res.status(500).json({ message: error.message });
