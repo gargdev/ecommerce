@@ -6,7 +6,8 @@ const Order = require("../models/Order");
 const addProduct = async (req, res) => {
   try {
     const { name, description, category, basePrice, isCustomizable, length, width, height, variants, woodTypes } = req.body;
-    const image = req.file ? req.file.filename : null;
+    // Use req.file.path (Cloudinary returns the URL here)
+    const image = req.file ? req.file.path : null;
 
     if (!name || !description || !category || !basePrice || !image) {
       return res.status(400).json({ message: 'Required fields are missing' });

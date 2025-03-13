@@ -1,50 +1,40 @@
+// src/components/ManageWoodTypes.js
 import React, { useEffect, useState } from 'react';
-import api from '../../api/api';
+import { useDispatch, useSelector } from 'react-redux';
 import Loader from '../../components/common/Loader';
+import { fetchWoodTypes, addWoodType, updateWoodType, deleteWoodType } from '../../features/woodtype/woodTypeSlice';
 
 const ManageWoodTypes = () => {
-  const [woodTypes, setWoodTypes] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const dispatch = useDispatch();
+  const { woodTypes, loading, error } = useSelector((state) => state.woodTypes);
+  
   const [newWoodType, setNewWoodType] = useState({ name: '', pricePerCubicMeter: '' });
-
-  const fetchWoodTypes = async () => {
-    setLoading(true);
-    try {
-      const response = await api.get('/api/wood');
-      setWoodTypes(response.data);
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to fetch wood types');
-    }
-    setLoading(false);
-  };
+  const [editId, setEditId] = useState(null);
+  const [editData, setEditData] = useState({ name: '', pricePerCubicMeter: '' });
 
   useEffect(() => {
-    fetchWoodTypes();
-  }, []);
+    dispatch(fetchWoodTypes());
+  }, [dispatch]);
 
-  const handleAddWoodType = async (e) => {
+  const handleAddWoodType = (e) => {
     e.preventDefault();
-    try {
-      const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-      const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
-      const response = await api.post('/api/wood', newWoodType, config);
-      setWoodTypes([...woodTypes, response.data]);
-      setNewWoodType({ name: '', pricePerCubicMeter: '' });
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to add wood type');
-    }
+    dispatch(addWoodType(newWoodType));
+    setNewWoodType({ name: '', pricePerCubicMeter: '' });
   };
 
-  const handleUpdatePrice = async (id, pricePerCubicMeter) => {
-    try {
-      const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-      const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
-      const response = await axios.put(`/api/wood/${id}`, { pricePerCubicMeter }, config);
-      setWoodTypes(woodTypes.map((wt) => (wt._id === id ? response.data : wt)));
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to update wood price');
-    }
+  const handleEditClick = (woodType) => {
+    setEditId(woodType._id);
+    setEditData({ name: woodType.name, pricePerCubicMeter: woodType.pricePerCubicMeter });
+  };
+
+  const handleUpdateWoodType = (e) => {
+    e.preventDefault();
+    dispatch(updateWoodType({ id: editId, woodTypeData: editData }));
+    setEditId(null);
+  };
+
+  const handleDeleteWoodType = (id) => {
+    dispatch(deleteWoodType(id));
   };
 
   return (
@@ -71,9 +61,7 @@ const ManageWoodTypes = () => {
               type="number"
               step="0.01"
               value={newWoodType.pricePerCubicMeter}
-              onChange={(e) =>
-                setNewWoodType({ ...newWoodType, pricePerCubicMeter: e.target.value })
-              }
+              onChange={(e) => setNewWoodType({ ...newWoodType, pricePerCubicMeter: e.target.value })}
               className="w-full p-2 border rounded"
               required
             />
@@ -85,29 +73,76 @@ const ManageWoodTypes = () => {
       </div>
       <div>
         <h2 className="text-2xl font-semibold mb-4">Existing Wood Types</h2>
-        {woodTypes.length > 0 ? (
+        {woodTypes && woodTypes.length > 0 ? (
           <table className="min-w-full border">
             <thead>
               <tr className="bg-gray-200">
                 <th className="px-4 py-2 border">Name</th>
                 <th className="px-4 py-2 border">Price per Cubic Meter</th>
-                {/* <th className="px-4 py-2 border">Actions</th> */}
+                <th className="px-4 py-2 border">Actions</th>
               </tr>
             </thead>
             <tbody>
               {woodTypes.map((wt) => (
                 <tr key={wt._id} className="border-b">
-                  <td className="px-4 py-2">{wt.name}</td>
-                  <td className="px-4 py-2">{wt.pricePerCubicMeter}</td>
-                  {/* <td className="px-4 py-2">
-                    <input
-                      type="number"
-                      step="0.01"
-                      placeholder="New Price"
-                      className="p-2 border rounded mr-2"
-                      onBlur={(e) => handleUpdatePrice(wt._id, e.target.value)}
-                    />
-                  </td> */}
+                  <td className="px-4 py-2">
+                    {editId === wt._id ? (
+                      <input
+                        type="text"
+                        value={editData.name}
+                        onChange={(e) => setEditData({ ...editData, name: e.target.value })}
+                        className="p-2 border rounded"
+                      />
+                    ) : (
+                      wt.name
+                    )}
+                  </td>
+                  <td className="px-4 py-2">
+                    {editId === wt._id ? (
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={editData.pricePerCubicMeter}
+                        onChange={(e) => setEditData({ ...editData, pricePerCubicMeter: e.target.value })}
+                        className="p-2 border rounded"
+                      />
+                    ) : (
+                      wt.pricePerCubicMeter
+                    )}
+                  </td>
+                  <td className="px-4 py-2">
+                    {editId === wt._id ? (
+                      <>
+                        <button
+                          onClick={handleUpdateWoodType}
+                          className="bg-green-500 text-white px-2 py-1 mr-2 rounded"
+                        >
+                          Save
+                        </button>
+                        <button
+                          onClick={() => setEditId(null)}
+                          className="bg-gray-500 text-white px-2 py-1 rounded"
+                        >
+                          Cancel
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => handleEditClick(wt)}
+                          className="bg-yellow-500 text-white px-2 py-1 mr-2 rounded"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDeleteWoodType(wt._id)}
+                          className="bg-red-500 text-white px-2 py-1 rounded"
+                        >
+                          Delete
+                        </button>
+                      </>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>

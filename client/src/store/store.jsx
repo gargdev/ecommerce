@@ -5,6 +5,8 @@ import productReducer from '../features/products/productSlice';
 import cartReducer from '../features/cart/cartSlice';
 import orderReducer from '../features/orders/orderSlice';
 import adminReducer from '../features/admin/adminSlice';
+import woodTypeReducer from '../features/woodtype/woodTypeSlice'; // Adjust the path as needed
+
 
 const store = configureStore({
   reducer: {
@@ -13,6 +15,7 @@ const store = configureStore({
     cart: cartReducer,
     orders: orderReducer,
     admin: adminReducer,
+    woodTypes: woodTypeReducer,
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware(), // Redux Thunk is included by default
 });

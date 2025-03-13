@@ -1,3 +1,4 @@
+// src/components/AddProduct.js
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
@@ -112,9 +113,8 @@ const AddProduct = () => {
         formData.append('height', productData.height);
       }
 
-      // Append variants as JSON string
+      // Append variants and selected wood types as JSON strings
       formData.append('variants', JSON.stringify(variants));
-      // Append selected wood types as JSON string
       formData.append('woodTypes', JSON.stringify(productData.selectedWoodTypes));
 
       if (imageFile) {
