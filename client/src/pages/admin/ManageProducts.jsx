@@ -43,7 +43,7 @@ const ManageProducts = () => {
             <div key={product._id} className="border rounded-lg shadow-lg p-4 bg-white">
               <div className="flex justify-center mb-4">
                 <img
-                  src={`/uploads/${product.image}`}
+                  src={product.image} // Use Cloudinary URL directly
                   alt={product.name}
                   className="w-40 h-40 object-cover rounded"
                 />

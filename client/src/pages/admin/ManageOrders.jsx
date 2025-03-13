@@ -1,37 +1,36 @@
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchAdminOrders } from '../../features/admin/adminSlice';
+import { fetchAdminOrders, updateOrderStatus, resetUpdate } from '../../features/admin/adminSlice';
 import Loader from '../../components/common/Loader';
-import axios from 'axios';
 
 const ManageOrders = () => {
   const dispatch = useDispatch();
-  const { orders, loading, error } = useSelector((state) => state.admin);
+  const { orders, loading, error, update } = useSelector((state) => state.admin);
 
+  // Fetch orders when the component mounts
   useEffect(() => {
     dispatch(fetchAdminOrders());
   }, [dispatch]);
 
-  const handleStatusUpdate = async (orderId, newStatus) => {
-    try {
-      const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-      const config = {
-        headers: { Authorization: `Bearer ${userInfo.token}` },
-      };
-      await axios.put(`/api/admin/order/${orderId}`, { status: newStatus }, config);
+  // When update is successful, re-fetch orders and reset the update state
+  useEffect(() => {
+    if (update.success) {
       dispatch(fetchAdminOrders());
-    } catch (err) {
-      console.error('Status update error', err);
+      dispatch(resetUpdate());
     }
+  }, [dispatch, update.success]);
+
+  const handleStatusUpdate = (orderId, newStatus) => {
+    dispatch(updateOrderStatus({ orderId, newStatus }));
   };
 
   return (
     <div className="max-w-4xl mx-auto">
       <h1 className="text-3xl font-bold mb-6">Manage Orders</h1>
-      {loading ? (
+      {(loading || update.loading) ? (
         <Loader />
-      ) : error ? (
-        <div className="text-red-500">{error}</div>
+      ) : error || update.error ? (
+        <div className="text-red-500">{error || update.error}</div>
       ) : (
         <div className="space-y-4">
           {orders.map((order) => (

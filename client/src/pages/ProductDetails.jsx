@@ -1,86 +1,118 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import { addItemToCart } from '../features/cart/cartSlice';
 import Loader from '../components/common/Loader';
 
 const ProductDetails = () => {
   const { id } = useParams();
   const { products, loading, error } = useSelector((state) => state.products);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
-  // Find the product by id
   const product = products.find((item) => item._id === id);
-
-  // Determine if product has variants and if it's customizable
   const hasVariants = product && product.variants && product.variants.length > 0;
   const isCustomizable = product && product.isCustomizable;
 
-  // State to decide which pricing mode to use.
-  // If a product is customizable and also has variants, user can toggle.
   const [useCustomization, setUseCustomization] = useState(isCustomizable);
+  const [quantity, setQuantity] = useState(1);
   
-  // States for customization options
+  // Customization states
   const [length, setLength] = useState('');
   const [breadth, setBreadth] = useState('');
   const [height, setHeight] = useState('');
   const [selectedWood, setSelectedWood] = useState('');
   const [calculatedPrice, setCalculatedPrice] = useState(0);
 
-  // States for variant selection
+  // Variant states
   const [selectedVariants, setSelectedVariants] = useState({});
   const [variantPrice, setVariantPrice] = useState(0);
 
-  // When product loads, set defaults for wood option, variant options, and pricing mode.
   useEffect(() => {
     if (product) {
-      if (isCustomizable && product.woodTypes && product.woodTypes.length > 0) {
+      // Set default wood type
+      if (isCustomizable && product.woodTypes?.length > 0) {
         setSelectedWood(product.woodTypes[0]._id);
       }
+      
+      // Set default variants
       if (hasVariants) {
         const defaults = {};
         product.variants.forEach((variant) => {
-          if (variant.options && variant.options.length > 0) {
+          if (variant.options?.length > 0) {
             defaults[variant._id] = variant.options[0]._id;
           }
         });
         setSelectedVariants(defaults);
       }
-      // Default mode: if product is customizable, use customization; otherwise variant mode.
+      
       setUseCustomization(isCustomizable);
     }
   }, [product, isCustomizable, hasVariants]);
 
-  // Recalculate customization price when dimensions or selected wood type change.
+  // Calculate customization price
+  // useEffect(() => {
+  //   if (product && isCustomizable) {
+  //     const l = parseFloat(length);
+  //     const b = parseFloat(breadth);
+  //     const h = parseFloat(height);
+      
+  //     if (isNaN(l) || isNaN(b) || isNaN(h)) {
+  //       setCalculatedPrice(0);
+  //       return;
+  //     }
+
+  //     const volume = l * b * h;
+  //     const woodOption = product.woodTypes.find((wood) => wood._id === selectedWood);
+      
+  //     if (!woodOption) {
+  //       setCalculatedPrice(0);
+  //       return;
+  //     }
+
+  //     const woodPrice = woodOption.price;
+  //     setCalculatedPrice(volume * woodPrice);
+  //   }
+  // }, [length, breadth, height, selectedWood, product, isCustomizable]);
   useEffect(() => {
     if (product && isCustomizable) {
       const l = parseFloat(length);
       const b = parseFloat(breadth);
       const h = parseFloat(height);
-      if (isNaN(l) || isNaN(b) || isNaN(h)) {
-        setCalculatedPrice(0);
-        return;
-      }
-      const volume = l * b * h; // volume in cubic meters
+  
       const woodOption = product.woodTypes.find((wood) => wood._id === selectedWood);
+      
       if (!woodOption) {
         setCalculatedPrice(0);
         return;
       }
-      const woodPrice = woodOption.price; // price per cubic meter
+  
+      const woodPrice = woodOption.price;
+  
+      if (isNaN(l) || isNaN(b) || isNaN(h)) {
+        setCalculatedPrice(woodPrice);
+        return;
+      }
+  
+      const volume = l * b * h;
       setCalculatedPrice(volume * woodPrice);
     }
   }, [length, breadth, height, selectedWood, product, isCustomizable]);
-
-  // Recalculate variant price when variant selections change.
+  
+  // Calculate variant price
   useEffect(() => {
     if (product && hasVariants) {
-      let total = 0;
+      // let total = product.basePrice || 0;
+      let total =  0;
+
       product.variants.forEach((variant) => {
         const selectedOptionId = selectedVariants[variant._id];
         const option = variant.options.find((opt) => opt._id === selectedOptionId);
-        if (option) {
-          total += option.priceAdjustment; // add variant price adjustment
+        if (option?.priceAdjustment) {
+          total += option.priceAdjustment;
         }
       });
+      
       setVariantPrice(total);
     }
   }, [selectedVariants, product, hasVariants]);
@@ -89,10 +121,37 @@ const ProductDetails = () => {
   if (error) return <div className="text-red-500">{error}</div>;
   if (!product) return <div className="text-gray-500">Product not found.</div>;
 
-  // Calculate the final price based on the selected mode.
-  const finalPrice = useCustomization
-    ? calculatedPrice
-    : product.basePrice + variantPrice;
+  const finalPrice = useCustomization ? calculatedPrice : variantPrice;
+
+  const handleAddToCart = async () => {
+    const itemData = {
+      productId: product._id,
+      quantity,
+      price: finalPrice,
+    };
+
+    if (isCustomizable && useCustomization) {
+      itemData.length = parseFloat(length);
+      itemData.breadth = parseFloat(breadth);
+      itemData.height = parseFloat(height);
+      itemData.woodType = selectedWood;
+    }
+
+    if (!useCustomization && hasVariants) {
+      itemData.selectedVariants = selectedVariants;
+    }
+
+    try {
+      await dispatch(addItemToCart(itemData)).unwrap();
+    } catch (error) {
+      console.error('Error adding item to cart:', error);
+    }
+  };
+
+  const handleBuyNow = async () => {
+    await handleAddToCart();
+    navigate('/checkout');
+  };
 
   return (
     <div className="max-w-4xl mx-auto p-4">
@@ -104,29 +163,64 @@ const ProductDetails = () => {
         />
         <div className="flex-1">
           <h1 className="text-3xl font-bold mb-4">{product.name}</h1>
-          <p className="text-xl text-gray-700 mb-4">Price: ${finalPrice.toFixed(2)}</p>
+          <p className="text-xl text-gray-700 mb-4">
+            Price: ${(finalPrice * quantity).toFixed(2)}
+          </p>
           <p className="mb-4">{product.description}</p>
 
-          {/* Toggle only when product is customizable and has variant options */}
+          {/* Quantity Selector */}
+          <div className="mb-4">
+            <label htmlFor="quantity" className="block font-medium mb-2">
+              Quantity
+            </label>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                className="px-3 py-1 border rounded"
+              >
+                -
+              </button>
+              <input
+                type="number"
+                id="quantity"
+                min="1"
+                value={quantity}
+                onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                className="w-20 text-center border rounded p-1"
+              />
+              <button
+                onClick={() => setQuantity(quantity + 1)}
+                className="px-3 py-1 border rounded"
+              >
+                +
+              </button>
+            </div>
+          </div>
+
+          {/* Toggle Customization/Variant Selection */}
           {isCustomizable && hasVariants && (
             <div className="mb-4">
               <button
                 onClick={() => setUseCustomization(true)}
-                className={`mr-2 p-2 border ${useCustomization ? 'bg-blue-500 text-white' : 'bg-white text-black'}`}
+                className={`mr-2 p-2 border ${
+                  useCustomization ? 'bg-blue-500 text-white' : 'bg-white text-black'
+                }`}
               >
                 Customize
               </button>
               <button
                 onClick={() => setUseCustomization(false)}
-                className={`p-2 border ${!useCustomization ? 'bg-blue-500 text-white' : 'bg-white text-black'}`}
+                className={`p-2 border ${
+                  !useCustomization ? 'bg-blue-500 text-white' : 'bg-white text-black'
+                }`}
               >
                 Select Variant
               </button>
             </div>
           )}
 
-          {/* Render Customization Form if in customization mode */}
-          {(isCustomizable && useCustomization) && (
+          {/* Customization Form */}
+          {isCustomizable && useCustomization && (
             <div className="mt-6">
               <h2 className="text-2xl font-semibold mb-2">Customize Your Product</h2>
               <form className="space-y-4">
@@ -193,19 +287,24 @@ const ProductDetails = () => {
               </form>
               <div className="mt-4">
                 <h3 className="text-xl font-medium">Calculated Price:</h3>
-                <p className="text-lg font-bold">${calculatedPrice.toFixed(2)}</p>
+                <p className="text-lg font-bold">
+                  ${(calculatedPrice * quantity).toFixed(2)}
+                </p>
               </div>
             </div>
           )}
 
-          {/* Render Variant Selection Form if in variant mode or if product is not customizable */}
+          {/* Variant Selection Form */}
           {((!isCustomizable) || (hasVariants && !useCustomization)) && (
             <div className="mt-6">
               <h2 className="text-2xl font-semibold mb-2">Select Variants</h2>
               <form className="space-y-4">
                 {product.variants.map((variant) => (
                   <div key={variant._id}>
-                    <label htmlFor={`variant-${variant._id}`} className="block font-medium">
+                    <label
+                      htmlFor={`variant-${variant._id}`}
+                      className="block font-medium"
+                    >
                       {variant.type}
                     </label>
                     <select
@@ -221,7 +320,10 @@ const ProductDetails = () => {
                     >
                       {variant.options.map((option) => (
                         <option key={option._id} value={option._id}>
-                          {option.name} {option.priceAdjustment ? `(+ $${option.priceAdjustment.toFixed(2)})` : ''}
+                          {option.name}
+                          {option.priceAdjustment
+                            ? ` (+ $${option.priceAdjustment.toFixed(2)})`
+                            : ''}
                         </option>
                       ))}
                     </select>
@@ -230,24 +332,45 @@ const ProductDetails = () => {
               </form>
               <div className="mt-4">
                 <h3 className="text-xl font-medium">Price:</h3>
-                <p className="text-lg font-bold">${(product.basePrice + variantPrice).toFixed(2)}</p>
+                <p className="text-lg font-bold">
+                  ${(variantPrice * quantity).toFixed(2)}
+                </p>
               </div>
             </div>
           )}
 
-          {/* Fallback: for non-customizable products without variants, list wood options if available */}
+          {/* Wood Options for Non-customizable Products */}
           {!isCustomizable && !hasVariants && product.woodTypes && product.woodTypes.length > 0 && (
             <div className="mt-6">
               <h2 className="text-2xl font-semibold mb-2">Wood Options</h2>
               <ul>
                 {product.woodTypes.map((wood) => (
                   <li key={wood._id} className="mb-1">
-                    <span className="font-semibold">{wood.woodType.name.trim()}</span> - ${wood.price.toFixed(2)}
+                    <span className="font-semibold">
+                      {wood.woodType.name.trim()}
+                    </span>{' '}
+                    - ${wood.price.toFixed(2)}
                   </li>
                 ))}
               </ul>
             </div>
           )}
+
+          {/* Action Buttons */}
+          <div className="mt-6 flex justify-between">
+            <button
+              onClick={handleAddToCart}
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-200"
+            >
+              Add to Cart
+            </button>
+            <button
+              onClick={handleBuyNow}
+              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-200"
+            >
+              Buy Now
+            </button>
+          </div>
         </div>
       </div>
     </div>

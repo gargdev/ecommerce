@@ -17,11 +17,10 @@ const router = express.Router();
 // Product Routes
 router.post("/product",
   (req, res, next) => {
-    console.log("Uploaded file:", req.file); // This will confirm if multer handled the upload correctly
-    next(); // Continue to the addProduct controller
+    console.log("Uploaded file:", req.file);
+    next();
   },
-  
-  protect, isAdmin,  upload.single("image"), addProduct);
+  protect, isAdmin, upload.single("image"), addProduct);
 router.put("/product/:id", protect, isAdmin, updateProduct);
 router.delete("/product/:id", protect, isAdmin, deleteProduct);
 

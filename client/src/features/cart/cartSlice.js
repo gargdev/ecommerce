@@ -16,20 +16,53 @@ export const fetchCart = createAsyncThunk(
   }
 );
 
-// Add an item to the cart
+// Helper function to generate a unique key for cart items
+const generateItemKey = (itemData) => {
+  const { productId, selectedVariants, length, breadth, height, woodType } = itemData;
+  
+  // For variant-based products
+  if (selectedVariants && Object.keys(selectedVariants).length > 0) {
+    // Sort the variant keys to ensure consistent order
+    const sortedVariants = Object.entries(selectedVariants)
+      .sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
+      .reduce((acc, [key, value]) => {
+        acc[key] = value;
+        return acc;
+      }, {});
+    return `${productId}-${JSON.stringify(sortedVariants)}`;
+  }
+  
+  // For customizable products
+  if (length && breadth && height && woodType) {
+    return `${productId}-${length}-${breadth}-${height}-${woodType}`;
+  }
+  
+  // For simple products
+  return productId;
+};
+
 export const addItemToCart = createAsyncThunk(
   'cart/addItemToCart',
   async (itemData, { getState, rejectWithValue }) => {
     try {
       const { auth: { userInfo } } = getState();
       const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
-      const response = await api.post('/api/cart', itemData, config);
+      
+      // Generate a unique key for the item configuration
+      const itemKey = generateItemKey(itemData);
+      
+      const response = await api.post('/api/cart', {
+        ...itemData,
+        itemKey
+      }, config);
+      
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      return rejectWithValue(error.response?.data || error.message);
     }
   }
 );
+
 
 // Remove an item from the cart
 export const removeItemFromCart = createAsyncThunk(
