@@ -6,7 +6,7 @@ const cloudinary = require("../config/cloudinary");
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: async (req, file) => {
-    const allowedFormats = ["image/jpeg", "image/png"];
+    const allowedFormats = ["image/jpeg", "image/png", "image/webp"];
     if (!allowedFormats.includes(file.mimetype)) {
       throw new Error(`Unsupported file type: ${file.mimetype}`);
     }
