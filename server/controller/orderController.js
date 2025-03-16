@@ -14,8 +14,6 @@ const placeOrder = async (req, res) => {
     await order.save();
     await Cart.findOneAndDelete({ user: req.user.id }); // Clear cart
 
-<<<<<<< HEAD
-=======
 
 
      // Send Order Confirmation Email
@@ -45,7 +43,6 @@ const placeOrder = async (req, res) => {
      await sendEmail(userEmail, subject, text, html);
 
 
->>>>>>> 9f8c6780f03d07a0227895a926bd0ff9fb5b53f1
     res.status(201).json(order);
   } catch (error) {
     res.status(500).json({ message: error.message });
