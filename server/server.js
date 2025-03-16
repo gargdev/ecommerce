@@ -11,6 +11,7 @@ const cartRoutes = require("./routes/cartRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const adminRoutes = require("./routes/adminRoutes");
+//const emailRoutes = require("./routes/emailRoute");
 
 dotenv.config();
 connectDB();
@@ -29,6 +30,9 @@ app.use("/api/cart", cartRoutes);
 app.use("/api/orders", orderRoutes);
 // app.use("/api/payment", paymentRoutes);
 app.use("/api/admin", adminRoutes);
+
+//app.use("/api/emails", emailRoutes); // New Email Route
+
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
