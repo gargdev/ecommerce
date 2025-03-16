@@ -39,7 +39,7 @@ const Cart = () => {
               <div key={item._id} className="flex items-center justify-between border p-4 rounded">
                 <div className="flex items-center space-x-4">
                   <img
-                    src={item.product.image}
+                    src={item.product.images?.[0]}
                     alt={typeof item.product === 'object' ? item.product.name : 'Product'}
                     className="w-20 h-20 object-cover rounded"
                   />
