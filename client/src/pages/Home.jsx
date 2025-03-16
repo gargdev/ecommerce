@@ -1,11 +1,15 @@
 // src/pages/Home.jsx
 import React from 'react';
+import Hero from '../components/Home/Hero';
+import Browse from '../components/Home/Browse';
+import FeaturedProducts from '../components/Home/FeaturedProducts';
 
 const Home = () => {
   return (
     <div>
-      <h1 className="text-3xl font-bold">Welcome to Furniture E-commerce</h1>
-      <p>This is the Home page.</p>
+      {<Hero/>}
+      {<Browse/>}
+      {<FeaturedProducts/>}
     </div>
   );
 };

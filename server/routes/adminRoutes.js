@@ -1,6 +1,7 @@
 const express = require("express");
 const {
   addProduct,
+  getProductById,
   updateProduct,
   deleteProduct,
   addWoodType,
@@ -15,12 +16,25 @@ const upload = require("../middleware/uploadMiddleware"); // Ensure this is impo
 const router = express.Router();
 
 // Product Routes
-router.post("/product",
+// router.post("/product",
+//   (req, res, next) => {
+//     console.log("Uploaded file:", req.file);
+//     next();
+//   },
+//   protect, isAdmin, upload.single("image"), addProduct);
+
+router.post(
+  '/product',
   (req, res, next) => {
-    console.log("Uploaded file:", req.file);
+    console.log("Uploaded files:", req.files);
     next();
   },
-  protect, isAdmin, upload.single("image"), addProduct);
+  protect,
+  isAdmin,
+  upload.array('images', 10), // Allow uploading up to 10 images per product
+  addProduct
+);
+router.get("/product/:id", protect, isAdmin, getProductById);
 router.put("/product/:id", protect, isAdmin, updateProduct);
 router.delete("/product/:id", protect, isAdmin, deleteProduct);
 

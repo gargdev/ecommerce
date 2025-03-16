@@ -74,6 +74,14 @@ const AppRoutes = () => {
           </PrivateRoute>
         }
       />
+       <Route
+        path="/admin/product/edit/:id"
+        element={
+          <PrivateRoute adminRequired={true}>
+            <AddProduct />
+          </PrivateRoute>
+        }
+      />
       <Route
         path="/admin/products"
         element={

@@ -46,7 +46,7 @@ export const updateProduct = createAsyncThunk(
   async ({ productId, productData }, { rejectWithValue }) => {
     try {
       // Assuming the update route is /api/products/:id and expects a PUT request
-      const response = await api.put(`/api/admin/${productId}`, productData);
+      const response = await api.put(`/api/admin/product/${productId}`, productData);
       // The controller returns { success: true, message: 'Product updated', product }
       return response.data.product;
     } catch (error) {
