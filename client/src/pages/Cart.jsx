@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchCart, removeItemFromCart } from '../features/cart/cartSlice';
 import Loader from '../components/common/Loader';
 import { Link } from 'react-router-dom';
+import Shiping from '../components/Home/Shiping';
 
 const Cart = () => {
   const dispatch = useDispatch();
@@ -23,7 +24,7 @@ const Cart = () => {
   };
 
   return (
-    <div>
+    <div className='mt-30'>
       <h1 className="text-3xl font-bold mb-6">Your Cart</h1>
       {loading ? (
         <Loader />
@@ -75,6 +76,7 @@ const Cart = () => {
           <Link to="/products" className="text-blue-500">Shop now</Link>
         </div>
       )}
+      {<Shiping/>}
     </div>
   );
 };

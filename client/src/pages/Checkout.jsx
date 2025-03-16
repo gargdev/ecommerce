@@ -34,7 +34,7 @@ const Checkout = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="max-w-3xl mx-auto mt-30">
       <h1 className="text-3xl font-bold mb-6">Checkout</h1>
       {loading && <Loader />}
       {error && <div className="text-red-500">{error}</div>}

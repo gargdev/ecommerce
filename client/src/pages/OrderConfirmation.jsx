@@ -8,7 +8,7 @@ const OrderConfirmation = () => {
   const latestOrder = orders[orders.length - 1];
 
   return (
-    <div className="max-w-3xl mx-auto text-center">
+    <div className="max-w-3xl mx-auto text-center mt-30">
       <h1 className="text-3xl font-bold mb-4">Order Confirmation</h1>
       {latestOrder ? (
         <div>
